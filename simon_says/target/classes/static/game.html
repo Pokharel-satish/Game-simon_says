@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Says Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        .color-box {
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #Red { background-color: red; }
+        #Blue { background-color: blue; }
+        #Green { background-color: green; }
+        #Yellow { background-color: yellow; }
+        .sequence-display {
+            margin: 20px 0;
+            font-size: 24px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simon Says Game</h1>
+    <div id="colorBoxes">
+        <div id="Red" class="color-box"></div>
+        <div id="Blue" class="color-box"></div>
+        <div id="Green" class="color-box"></div>
+        <div id="Yellow" class="color-box"></div>
+    </div>
+    <div class="sequence-display" id="sequenceDisplay"></div>
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="submitSequence()">Submit</button>
+
+    <script>
+        let sequence = [];
+        let userSequence = [];
+
+        function startGame() {
+            fetch('/game/generate-sequence')
+                .then(response => response.json())
+                .then(data => {
+                    sequence = data;
+                    displaySequence();
+                });
+        }
+
+        function displaySequence() {
+            const sequenceDisplay = document.getElementById('sequenceDisplay');
+            sequenceDisplay.innerHTML = `Sequence: ${sequence.join(', ')}`;
+        }
+
+        document.querySelectorAll('.color-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const color = this.id;
+                userSequence.push(color);
+                console.log('User clicked: ' + color);
+            });
+        });
+
+        function submitSequence() {
+            fetch('/game/validate-sequence', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userSequence)
+            })
+            .then(response => response.json())
+            .then(isCorrect => {
+                if (isCorrect) {
+                    alert('Correct! You win!');
+                } else {
+                    alert('Wrong sequence. Try again!');
+                }
+                userSequence = [];  // Reset for next round
+            });
+        }
+    </script>
+</body>
+</html>
